@@ -38,7 +38,7 @@ class TeamManager:
         self.meta_file = self.team_dir / self.META_FILE_NAME
         
         # Create shared directory if it doesn't exist
-        self.shared_dir.mkdir(exist_ok=True)
+        self.shared_dir.mkdir(parents=True, exist_ok=True)
         
         # Only auto-create team directory if explicitly requested
         if auto_create and not self.team_dir.exists():
@@ -46,7 +46,7 @@ class TeamManager:
     
     def create_team(self, budget: float = 100.0) -> None:
         """Create team directory and initial meta.json"""
-        self.team_dir.mkdir(exist_ok=True)
+        self.team_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize meta.json with default values
         meta_data = {

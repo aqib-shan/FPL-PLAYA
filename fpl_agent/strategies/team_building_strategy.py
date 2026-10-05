@@ -497,13 +497,13 @@ OUTPUT INSTRUCTIONS:
 - Players must be included exactly as written in the your current team and player list.
 - Do not rename any player.
 
-Important: For each decision, provide clear, detailed reasoning explaining:
-- **Transfers**: Why each transfer is being made (form, fixtures, injuries, value, etc.). If performing more transfers than you have free transfers, explain clearly why you have chosen to do this on the basis of points potential, since the transfers will cost you points to make.
+Important: For each decision, provide extremely concise reasoning (maximum 1-2 short sentences) explaining:
+- **Transfers**: Why each transfer is being made (form, fixtures, injuries, value, etc.). If performing more transfers than you have free transfers, briefly explain why the hit is worth it.
 - **Chip usage**: Why a chip should be used (or not used) this gameweek
-- **Captain/Vice-captain**: Why they are the best choices for this gameweek
-- **Starting 11**: Why each player is in the starting lineup
-- **Substitutes**: Why each player is on the bench and their sub order priority
-- **Formation**: Why this formation is optimal for the current fixtures
+- **Captain/Vice-captain**: Briefly why they are the best choices for this gameweek
+- **Starting 11**: Briefly why each player is starting
+- **Substitutes**: Briefly why each player is benched
+- **Formation**: Briefly why this formation is optimal
 
 You MUST respond with ONLY the following JSON format. No other text, no markdown, no explanations outside the JSON:
 

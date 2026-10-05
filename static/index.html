@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL AI Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-futbol neon-icon"></i>
+                <h2>FPL Agent</h2>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-tab="update">
+                    <i class="fa-solid fa-bolt"></i> Analyze Team
+                </a>
+                <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </a>
+            </nav>
+
+            <div class="api-status">
+                <div class="status-indicator"></div>
+                <span id="api-status-text">Checking systems...</span>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <h1>AI Dashboard</h1>
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-section active">
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <h3>Team Value</h3>
+                        <p class="stat-value" id="team-value">£0.0m</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <h3>In The Bank</h3>
+                        <p class="stat-value" id="team-bank">£0.0m</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <h3>Expected Pts</h3>
+                        <p class="stat-value" id="team-xpts">0.0</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <h3>Active Chip</h3>
+                        <p class="stat-value" id="team-chip">None</p>
+                    </div>
+                </div>
+
+                <div class="pitch-container glass">
+                    <div class="pitch-header">
+                        <h2>Starting XI</h2>
+                        <div class="captain-badges">
+                            <span class="badge cap-badge"><i class="fa-solid fa-c"></i> <span id="cap-name">-</span></span>
+                            <span class="badge vice-badge"><i class="fa-solid fa-v"></i> <span id="vice-name">-</span></span>
+                        </div>
+                    </div>
+                    
+                    <div id="loading-team" class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading your AI squad...</p>
+                    </div>
+                    
+                    <div class="players-list" id="starting-xi-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="bench-container glass">
+                    <h2>Substitutes</h2>
+                    <div class="players-list" id="subs-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Login Overlay (Shown if no team is loaded) -->
+            <section id="login-overlay" class="view-section" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:100; padding:4rem;">
+                <div class="action-card glass">
+                    <h2>Connect FPL Account</h2>
+                    <p>Enter your FPL Team ID to fetch your actual team publicly.</p>
+                    <div class="form-group">
+                        <label>FPL Team ID (e.g. 123456)</label>
+                        <input type="number" id="login-team-id" class="glass-input" placeholder="Find this in your FPL Points URL">
+                    </div>
+                    <button class="btn-primary" id="btn-login">Fetch Team</button>
+                    <div id="login-loader" class="process-loader hidden">
+                        <div class="spinner"></div>
+                        <p>Fetching your public team data...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analyze Team View -->
+            <section id="update-view" class="view-section">
+                <div class="action-card glass">
+                    <h2>Analyze & Optimize Team</h2>
+                    <p>The AI will evaluate your current squad, suggest transfers, and pick the best captain based on upcoming fixtures. If your team is perfect, it will advise no changes.</p>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sync-checkbox">
+                            Auto-sync to Official FPL Account
+                        </label>
+                        <small>Requires credentials in .env or Settings.</small>
+                    </div>
+                    
+                    <button class="btn-primary" id="btn-update">
+                        <i class="fa-solid fa-bolt"></i> Run AI Analysis
+                    </button>
+                    
+                    <div id="update-loader" class="process-loader hidden">
+                        <div class="spinner"></div>
+                        <p>AI is strategizing... This can take up to 2 minutes.</p>
+                    </div>
+                    
+                    <div id="update-result" class="result-box hidden glass">
+                        <!-- Results injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings-view" class="view-section">
+                <div class="action-card glass">
+                    <h2>Sync Credentials</h2>
+                    <p>If you don't have them in your .env, you can provide them here to sync automatically.</p>
+                    
+                    <div class="form-group">
+                        <label>FPL Email</label>
+                        <input type="email" id="fpl-email" placeholder="example@email.com" class="glass-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>FPL Password</label>
+                        <input type="password" id="fpl-password" placeholder="••••••••" class="glass-input">
+                    </div>
+                    
+                    <button class="btn-secondary" onclick="alert('Credentials saved to session.')">Save Locally</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

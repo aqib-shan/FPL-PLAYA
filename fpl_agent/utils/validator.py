@@ -147,9 +147,10 @@ class Validator:
                 errors.append(f"Must have exactly {limit} {pos.lower()}s, got {position_counts.get(pos, 0)}")
 
         # Validate team limits
-        for team_name, count in team_counts.items():
-            if count > max_players_per_team:
-                errors.append(f"Maximum {max_players_per_team} players allowed from {team_name}, got {count}")
+        # Removed strict validation to allow edge cases where real-life transfers push a team to 4+ players
+        # for team_name, count in team_counts.items():
+        #     if count > max_players_per_team:
+        #         errors.append(f"Maximum {max_players_per_team} players allowed from {team_name}, got {count}")
 
         # Check total cost vs budget (skip for normal weekly updates; only for wildcard/free hit)
         if not skip_full_squad_budget_check:

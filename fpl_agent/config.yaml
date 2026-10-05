@@ -14,7 +14,7 @@ llm:
   # Main LLM for complex team optimization (fallback - no team_directory to avoid conflicts)
   main:
     provider: "gemini"
-    model: "gemini-2.5-pro"  # Thinking and web search
+    model: "gemini-flash-latest"  # Use latest to avoid 503
     # team_directory: "Gemini-2.5-Pro"
     max_output_tokens: 65536
     temperature: 0.3
@@ -25,7 +25,7 @@ llm:
   # Main LLM via OpenRouter (to avoid Gemini API usage limits)
   main_openrouter:
     provider: "openrouter"
-    model: "google/gemini-2.5-pro"  # Thinking and web search via OpenRouter
+    model: "google/gemini-2.5-flash"  # Confirmed working
     team_directory: "Gemini-2.5-Pro"
     web_search: true
     max_output_tokens: 65536
@@ -37,7 +37,7 @@ llm:
   # Lightweight LLM for team-specific analysis
   lightweight:
     provider: "gemini"
-    model: "gemini-2.5-flash-lite"  # Cost-effective for team analysis
+    model: "gemini-flash-lite-latest"  # Cost-effective for team analysis
     max_output_tokens: 65536
     temperature: 0.2
     top_p: 0.8
@@ -47,7 +47,7 @@ llm:
   # Lightweight LLM via OpenRouter (to avoid Gemini API usage limits)
   lightweight_openrouter:
     provider: "openrouter"
-    model: "google/gemini-2.5-flash-lite"  # Cost-effective for team analysis via OpenRouter
+    model: "google/gemini-3.5-flash-lite"  # Cost-effective for team analysis via OpenRouter
     # Large JSON payloads (full squads + mixed injury batches) need headroom; 16k can truncate mid-object.
     max_output_tokens: 65536
     temperature: 0.2

@@ -34,8 +34,12 @@ logger = logging.getLogger(__name__)
 class FPLAgent:
     """Main FPL Agent class that orchestrates all operations."""
     
-    def __init__(self, model_name: str = "main_openrouter"):
+    def __init__(self, model_name: Optional[str] = None):
         """Initialize the FPL Agent with configuration and services."""
+        import os
+        if model_name is None:
+            model_name = "main_openrouter" if os.environ.get('OPENROUTER_API_KEY') else "main"
+        
         self.config = Config()
         self.data_service = DataService(self.config)
         self.llm_strategy = TeamBuildingStrategy(self.config, model_name)
@@ -86,12 +90,16 @@ class FPLAgent:
             logger.error(f"FPL data fetch failed: {e}")
             raise
     
-    def enrich(self, all_gameweek_data: Optional[Dict[str, Any]] = None, gameweek: Optional[int] = None, rank_players: Optional[bool] = True, prompt_only: bool = False, model_name: str = "lightweight_openrouter", club: Optional[str] = None, club_run_insights: bool = True, club_run_injury: bool = True) -> Dict[str, Any]:
+    def enrich(self, all_gameweek_data: Optional[Dict[str, Any]] = None, gameweek: Optional[int] = None, rank_players: Optional[bool] = True, prompt_only: bool = False, model_name: Optional[str] = None, club: Optional[str] = None, club_run_insights: bool = True, club_run_injury: bool = True) -> Dict[str, Any]:
         """Enrich player data with LLM insights including expert insights and injury news.
         If club is set (e.g. 'Arsenal'), run expert insights and/or injury news for that club only and print results (no save).
         club_run_insights and club_run_injury control which to run when club is set; both True = run both."""
         try:
             logger.info("Enriching player data with LLM insights...")
+            
+            import os
+            if model_name is None:
+                model_name = "lightweight_openrouter" if os.environ.get('OPENROUTER_API_KEY') else "lightweight"
 
             if gameweek is None:
                 gameweek = self.data_service.fetcher.get_current_gameweek() or 1
