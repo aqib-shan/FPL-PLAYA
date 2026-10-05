@@ -17,6 +17,7 @@ from .strategies import TeamBuildingStrategy
 from .utils.display import display_comprehensive_team_result, display_fetch_results, display_data_status, display_detailed_players_status, display_team_status
 from .utils.missing_enrichments import get_missing_enrichments_from_data
 from .data.embedding_filter import EmbeddingFilter
+from .data.fpl_sync import sync_team_to_fpl
 
 
 # Configure logging
@@ -491,6 +492,7 @@ class FPLAgent:
             
             # Display team results
             display_comprehensive_team_result(team_result)
+            return team_result
             
         except Exception as e:
             logger.error(f"Failed to build team: {e}")
@@ -599,6 +601,7 @@ class FPLAgent:
             
             # Display results
             display_comprehensive_team_result(final_team_result)
+            return final_team_result
             
         except Exception as e:
             logger.error(f"Weekly update failed: {e}")
@@ -753,6 +756,14 @@ def main():
     parser.add_argument('--injury-only', action='store_true',
                        help="With --club: run only injury news (no expert insights)")
 
+    # Official FPL Sync options
+    parser.add_argument('--auto-sync', action='store_true',
+                       help='Automatically push transfers and lineup to official FPL account')
+    parser.add_argument('--fpl-email', type=str,
+                       help='FPL account email (overrides .env)')
+    parser.add_argument('--fpl-password', type=str,
+                       help='FPL account password (overrides .env)')
+
     # Logging level options
     parser.add_argument('--debug', action='store_true',
                        help='Show debug-level logging (most detailed)')
@@ -897,7 +908,7 @@ def main():
                 fpl_agent = FPLAgent(model_name)
                 
                 if args.command == 'build-team':
-                    fpl_agent.build_team(
+                    team_result = fpl_agent.build_team(
                         team_name=team_directory,
                         budget=args.budget,
                         gameweek=args.gameweek,
@@ -909,11 +920,25 @@ def main():
                     
                     if not args.show_prompt:
                         print(f"✅ Team building complete for '{team_directory}'!")
+                        
+                        if args.auto_sync and team_result:
+                            email = args.fpl_email or os.environ.get('FPL_EMAIL')
+                            password = args.fpl_password or os.environ.get('FPL_PASSWORD')
+                            if not email or not password:
+                                print("❌ Cannot auto-sync: FPL_EMAIL and FPL_PASSWORD must be provided via arguments or .env")
+                            else:
+                                print("🔄 Auto-syncing team to official FPL API...")
+                                all_data = fpl_agent.fetch_fpl_data(use_cached=True)
+                                success = sync_team_to_fpl(team_result, email, password, all_data['players'], args.gameweek or 1)
+                                if success:
+                                    print("✅ Successfully synced to FPL!")
+                                else:
+                                    print("❌ Sync to FPL failed. See logs for details.")
                     else:
                         print(f"✅ Prompt generated for '{team_directory}'!")
                         
                 elif args.command == 'gw-update':
-                    fpl_agent.gw_update(
+                    team_result = fpl_agent.gw_update(
                         team_name=team_directory,
                         gameweek=args.gameweek or 1,
                         cached_only=args.cached_only,
@@ -924,6 +949,20 @@ def main():
                     
                     if not args.show_prompt:
                         print(f"✅ Weekly update complete for '{team_directory}'!")
+                        
+                        if args.auto_sync and team_result:
+                            email = args.fpl_email or os.environ.get('FPL_EMAIL')
+                            password = args.fpl_password or os.environ.get('FPL_PASSWORD')
+                            if not email or not password:
+                                print("❌ Cannot auto-sync: FPL_EMAIL and FPL_PASSWORD must be provided via arguments or .env")
+                            else:
+                                print("🔄 Auto-syncing team to official FPL API...")
+                                all_data = fpl_agent.fetch_fpl_data(use_cached=True)
+                                success = sync_team_to_fpl(team_result, email, password, all_data['players'], args.gameweek or 1)
+                                if success:
+                                    print("✅ Successfully synced to FPL!")
+                                else:
+                                    print("❌ Sync to FPL failed. See logs for details.")
         
     except Exception as e:
         logger.error(f"Command failed: {e}")
