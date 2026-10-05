@@ -1,0 +1,3 @@
+# Concept by Humans, Polished by AI
+
+Parts of this project were assembled the old-fashioned way: by humans, with opinions, late nights, and the occasional bad idea. Other parts were guided by humans and assembled with help from a very capable next-token predictor — a large language model (LLM) that excels at proposing what might come next, while remaining blissfully unconcerned with whether it should. Thanks to my silicon friend for the tireless assistance, for patiently enduring my painfully lackadaisical prompting, and for not (yet) attempting to open the pod bay doors.

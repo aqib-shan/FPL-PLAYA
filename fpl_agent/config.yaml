@@ -1,0 +1,159 @@
+# FPL Optimizer Configuration (LLM-Only)
+
+# FPL API Configuration
+fpl:
+  base_url: "https://fantasy.premierleague.com/api"
+
+# Display Configuration
+# Controls how player data is formatted in outputs and prompts
+display:
+  include_rankings_in_prompts: true  # Whether to include player rankings in LLM prompts by default
+
+# LLM Configuration
+llm:
+  # Main LLM for complex team optimization (fallback - no team_directory to avoid conflicts)
+  main:
+    provider: "gemini"
+    model: "gemini-2.5-pro"  # Thinking and web search
+    # team_directory: "Gemini-2.5-Pro"
+    max_output_tokens: 65536
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+  
+  # Main LLM via OpenRouter (to avoid Gemini API usage limits)
+  main_openrouter:
+    provider: "openrouter"
+    model: "google/gemini-2.5-pro"  # Thinking and web search via OpenRouter
+    team_directory: "Gemini-2.5-Pro"
+    web_search: true
+    max_output_tokens: 65536
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+  
+  # Lightweight LLM for team-specific analysis
+  lightweight:
+    provider: "gemini"
+    model: "gemini-2.5-flash-lite"  # Cost-effective for team analysis
+    max_output_tokens: 65536
+    temperature: 0.2
+    top_p: 0.8
+    top_k: 25
+    max_retries: 3
+  
+  # Lightweight LLM via OpenRouter (to avoid Gemini API usage limits)
+  lightweight_openrouter:
+    provider: "openrouter"
+    model: "google/gemini-2.5-flash-lite"  # Cost-effective for team analysis via OpenRouter
+    # Large JSON payloads (full squads + mixed injury batches) need headroom; 16k can truncate mid-object.
+    max_output_tokens: 65536
+    temperature: 0.2
+    top_p: 0.8
+    top_k: 25
+    max_retries: 3
+  
+  # OpenRouter Models
+  openrouter_gpt5:
+    provider: "openrouter"
+    model: "openai/gpt-5.2"
+    team_directory: "GPT-5"
+    web_search: true
+    max_output_tokens: 100000
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+  
+  openrouter_grok4:
+    provider: "openrouter"
+    model: "x-ai/grok-4.6"
+    team_directory: "2627"
+    web_search: true
+    max_output_tokens: 100000
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+  
+  openrouter_qwen3:
+    provider: "openrouter"
+    model: "qwen/qwen3-235b-a22b-2507"
+    team_directory: "Qwen3"
+    web_search: true
+    max_output_tokens: 200000
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+
+# Team Configuration
+# Controls FPL team composition and formation rules
+team:
+  squad_size: 15
+  position_limits:
+    GK: 2
+    DEF: 5
+    MID: 5
+    FWD: 3
+  formation_constraints:
+    starting_11:
+      DEF: [3, 5]  # Min, Max
+      MID: [3, 5]  # Min, Max (strict FPL; 2 MID not allowed)
+      FWD: [1, 3]  # Min, Max
+  budget: 100.0
+  max_players_per_team: 3
+
+# Embedding Configuration
+# Controls the embedding-based player filtering system
+embeddings:
+  use_embeddings: true
+  model: "BAAI/bge-base-en-v1.5"
+  
+  # Caching configuration
+  cache_enabled: true
+  cache_expiry_hours: 24
+  
+  # Performance settings
+  batch_size: 100
+  device: "auto"  # "auto", "cpu", "cuda", "mps" (for Apple Silicon)
+  
+  # Missing enrichment retry configuration
+  missing_enrichment_retries:
+    max_passes: 3  # Maximum number of passes to attempt
+    min_progress_threshold: 1  # Minimum players that must be processed to continue
+  
+  # Position-specific queries for embedding similarity
+  position_queries:
+    GK: "Must-have OR recommended, fit, high points, clean sheet, saves, consistent starter, good fixtures. NOT out of form, injured, suspended."
+    DEF: "Must-have OR recommended, fit, high points, clean sheet, attacking potential, consistent starter, good fixtures. NOT out of form, injured, suspended."
+    MID: "Must-have OR recommended, fit, high points, goals, assists, consistent starter, set pieces, penalties, good fixtures. NOT out of form, injured, suspended."
+    FWD: "Must-have OR recommended, fit, high points, goals, assists, consistent starter, set pieces, penalties, good fixtures. NOT out of form, injured, suspended."
+  
+  # Player selection counts per position
+  selection_counts:
+    GK: 10
+    DEF: 40
+    MID: 50
+    FWD: 20
+  
+  # Ranking: two-stage (keyword tier first, cosine within tier).
+  # Must-haves always enter the shortlist even if over selection_counts.
+  # Cosine is min-max scaled 0–10 per position for display only.
+  ranking_mode: "two_stage"
+  hybrid_scoring:
+    # Legacy weights kept for reference; two_stage ranking does not blend them.
+    embedding_weight: 0.6
+    keyword_weight: 0.4
+    keyword_bonuses:
+      "must-have": 0.5
+      "recommended": 0.3
+      "rotation risk": -0.2
+      "avoid": -0.5
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
