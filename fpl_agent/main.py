@@ -930,14 +930,14 @@ def main():
                         print(f"✅ Team building complete for '{team_directory}'!")
                         
                         if args.auto_sync and team_result:
-                            email = args.fpl_email or os.environ.get('FPL_EMAIL')
-                            password = args.fpl_password or os.environ.get('FPL_PASSWORD')
-                            if not email or not password:
-                                print("❌ Cannot auto-sync: FPL_EMAIL and FPL_PASSWORD must be provided via arguments or .env")
+                            cookie_string = os.environ.get('FPL_COOKIE')
+                            access_token = os.environ.get('FPL_ACCESS_TOKEN')
+                            if not cookie_string:
+                                print("❌ Cannot auto-sync: FPL_COOKIE must be provided via .env")
                             else:
                                 print("🔄 Auto-syncing team to official FPL API...")
                                 all_data = fpl_agent.fetch_fpl_data(use_cached=True)
-                                success = sync_team_to_fpl(team_result, email, password, all_data['players'], args.gameweek or 1)
+                                success = sync_team_to_fpl(team_result, cookie_string, access_token, all_data['players'], args.gameweek or 1)
                                 if success:
                                     print("✅ Successfully synced to FPL!")
                                 else:
@@ -959,14 +959,14 @@ def main():
                         print(f"✅ Weekly update complete for '{team_directory}'!")
                         
                         if args.auto_sync and team_result:
-                            email = args.fpl_email or os.environ.get('FPL_EMAIL')
-                            password = args.fpl_password or os.environ.get('FPL_PASSWORD')
-                            if not email or not password:
-                                print("❌ Cannot auto-sync: FPL_EMAIL and FPL_PASSWORD must be provided via arguments or .env")
+                            cookie_string = os.environ.get('FPL_COOKIE')
+                            access_token = os.environ.get('FPL_ACCESS_TOKEN')
+                            if not cookie_string:
+                                print("❌ Cannot auto-sync: FPL_COOKIE must be provided via .env")
                             else:
                                 print("🔄 Auto-syncing team to official FPL API...")
                                 all_data = fpl_agent.fetch_fpl_data(use_cached=True)
-                                success = sync_team_to_fpl(team_result, email, password, all_data['players'], args.gameweek or 1)
+                                success = sync_team_to_fpl(team_result, cookie_string, access_token, all_data['players'], args.gameweek or 1)
                                 if success:
                                     print("✅ Successfully synced to FPL!")
                                 else:

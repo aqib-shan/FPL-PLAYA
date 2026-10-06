@@ -188,12 +188,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     capHtml = `<h4>Captaincy</h4><p><strong>C:</strong> ${ai.captain} <br/><span style="opacity: 0.8; font-size: 0.9em;">(${ai.captain_reason})</span></p><p><strong>VC:</strong> ${ai.vice_captain} <br/><span style="opacity: 0.8; font-size: 0.9em;">(${ai.vice_captain_reason})</span></p>`;
                 }
 
+                let syncHtml = '';
+                if (data.sync_message) {
+                    const syncColor = data.sync_status ? '#00ffaa' : '#ffaa00';
+                    syncHtml = `<div style="margin-top: 15px; padding: 10px; border-radius: 6px; border: 1px solid ${syncColor};">
+                        <strong style="color: ${syncColor};">Sync Status:</strong> <span id="sync-status-msg">${data.sync_message}</span>
+                    </div>`;
+                    
+                    if (!data.sync_status && data.sync_message.includes("Ready to apply manually")) {
+                        window.currentTeamResult = data.team;
+                        syncHtml += `
+                        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-primary" onclick="executeSync('transfers')" style="flex: 1; padding: 8px; font-size: 0.9em;">🔁 Apply Transfers</button>
+                            <button class="btn-primary" onclick="executeSync('lineup')" style="flex: 1; padding: 8px; font-size: 0.9em;">📋 Apply Lineup & Capt</button>
+                            <button class="btn-primary" onclick="executeSync('all')" style="flex: 1; background: #00ffaa; color: #0a0a0a; padding: 8px; font-size: 0.9em; font-weight: bold;">⚡ Sync All Changes</button>
+                        </div>
+                        `;
+                    }
+                }
+
                 resBox.innerHTML = `
                     <h3>✅ AI Analysis Complete</h3>
                     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; text-align: left;">
                         ${chipHtml}
                         ${transferHtml}
                         ${capHtml}
+                        ${syncHtml}
                     </div>
                     <button class="btn-secondary" style="margin-top:1rem; width: 100%;" onclick="document.querySelector('[data-tab=\\'dashboard\\']').click()">View New Squad</button>
                 `;
@@ -203,3 +223,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+window.executeSync = function(syncType) {
+    const statusMsg = document.getElementById('sync-status-msg');
+    if (statusMsg) statusMsg.innerHTML = "⏳ Syncing " + syncType + "...";
+    
+    fetch('/api/sync_action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            sync_type: syncType,
+            team_result: window.currentTeamResult
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (statusMsg) {
+                statusMsg.innerHTML = `✅ Successfully applied ${syncType} to your FPL account!`;
+                statusMsg.style.color = '#00ffaa';
+            }
+            alert(`Successfully applied ${syncType} to your FPL account!`);
+        } else {
+            if (statusMsg) {
+                statusMsg.innerHTML = `❌ Failed to sync: ${data.error}`;
+                statusMsg.style.color = '#ffaa00';
+            }
+            alert(`Failed to sync: ${data.error}`);
+        }
+    })
+    .catch(err => {
+        alert("Error syncing: " + err);
+    });
+};

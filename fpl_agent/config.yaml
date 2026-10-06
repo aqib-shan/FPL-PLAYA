@@ -11,6 +11,26 @@ display:
 
 # LLM Configuration
 llm:
+  # Primary model: Gemini 2.5 Flash
+  gemini_25_flash:
+    provider: "gemini"
+    model: "gemini-2.5-flash"
+    max_output_tokens: 65536
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+
+  # Best Gemini model for maximum reasoning
+  gemini_pro:
+    provider: "gemini"
+    model: "gemini-1.5-pro"  # Use 1.5-pro or 2.5-pro based on API access
+    max_output_tokens: 65536
+    temperature: 0.3
+    top_p: 0.8
+    top_k: 25
+    max_retries: 1
+
   # Main LLM for complex team optimization (fallback - no team_directory to avoid conflicts)
   main:
     provider: "gemini"
@@ -134,10 +154,10 @@ embeddings:
   
   # Player selection counts per position
   selection_counts:
-    GK: 10
-    DEF: 40
-    MID: 50
-    FWD: 20
+    GK: 5
+    DEF: 15
+    MID: 20
+    FWD: 10
   
   # Ranking: two-stage (keyword tier first, cosine within tier).
   # Must-haves always enter the shortlist even if over selection_counts.

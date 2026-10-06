@@ -124,6 +124,11 @@ class LLMEngine:
                 return text_response
                 
             except Exception as e:
+                error_str = str(e).lower()
+                if "429" in error_str or "resource_exhausted" in error_str:
+                    logger.error(f"Quota exhausted, skipping retries: {e}")
+                    raise e
+                    
                 if attempt < max_retries:
                     logger.warning(f"LLM query failed (attempt {attempt + 1}/{max_retries + 1}), retrying... Error: {e}")
                     continue

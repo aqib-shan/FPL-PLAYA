@@ -2,61 +2,61 @@ import logging
 import requests
 from typing import Dict, Any, List, Optional
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
 class FPLAPIClient:
     """Client for authenticated FPL API operations (making transfers, changing lineups)"""
     
-    def __init__(self, email: str, password: str):
-        self.email = email
-        self.password = password
+    def __init__(self, cookie_string: str, access_token: str = None):
+        self.cookie_string = cookie_string
+        self.access_token = access_token
         self.session = requests.Session()
         
         # Standard headers to mimic browser
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*'
+            'Accept': 'application/json, text/plain, */*',
+            'Cookie': self.cookie_string
         })
+        
+        if self.access_token:
+            self.session.headers['X-API-Authorization'] = f'Bearer {self.access_token}' if not self.access_token.startswith('Bearer') else self.access_token
         
         self.team_id = None
         
     def login(self) -> bool:
-        """Authenticate with FPL servers and fetch team ID"""
-        if not self.email or not self.password:
-            logger.error("FPL email or password not provided.")
+        """Authenticate using the Cookie and fetch team ID"""
+        if not self.cookie_string:
+            logger.error("FPL cookie not provided.")
             return False
             
-        logger.info(f"Attempting to log in to FPL as {self.email}...")
-        login_url = "https://users.premierleague.com/accounts/login/"
-        
-        payload = {
-            "login": self.email,
-            "password": self.password,
-            "app": "plfpl-web",
-            "redirect_uri": "https://fantasy.premierleague.com/"
-        }
+        logger.info("Attempting to authenticate with FPL using cookie...")
         
         try:
-            # Step 1: POST to login endpoint
-            response = self.session.post(login_url, data=payload, timeout=30)
-            
-            # Step 2: Verify login and get team ID (entry ID)
+            # Step 1: Verify token and get team ID (entry ID)
             me_url = "https://fantasy.premierleague.com/api/me/"
             me_response = self.session.get(me_url, timeout=30)
             
             if me_response.status_code == 200:
                 me_data = me_response.json()
-                self.team_id = me_data.get('player', {}).get('entry')
+                
+                player_data = me_data.get('player')
+                if player_data:
+                    self.team_id = player_data.get('entry')
+                else:
+                    logger.error(f"/api/me/ returned 200 but no 'player' object. Response: {me_data}")
+                    self.team_id = None
                 
                 if self.team_id:
-                    logger.info(f"Successfully logged in. Team ID: {self.team_id}")
+                    logger.info(f"Successfully authenticated. Team ID: {self.team_id}")
                     return True
                 else:
-                    logger.error("Logged in, but could not find an active FPL team (entry ID).")
+                    logger.error("Authenticated, but could not find an active FPL team (entry ID).")
                     return False
             else:
-                logger.error(f"Login failed. Status code: {me_response.status_code}")
+                logger.error(f"Authentication failed. Status code: {me_response.status_code}")
                 return False
                 
         except Exception as e:
@@ -101,10 +101,10 @@ class FPLAPIClient:
         }
         
         try:
-            # We also need the csrftoken for POST requests in Django apps usually?
-            # Wait, FPL api doesn't always strictly require csrf if using the session cookies right, 
-            # but we can pull it from cookies if needed.
-            csrf_token = self.session.cookies.get('csrftoken', domain='fantasy.premierleague.com')
+            # Extract CSRF token from raw cookie string
+            csrf_token_match = re.search(r'csrftoken=([^;]+)', self.cookie_string)
+            csrf_token = csrf_token_match.group(1) if csrf_token_match else None
+            
             headers = {'Content-Type': 'application/json'}
             if csrf_token:
                 headers['X-CSRFToken'] = csrf_token
@@ -137,7 +137,10 @@ class FPLAPIClient:
         }
         
         try:
-            csrf_token = self.session.cookies.get('csrftoken', domain='fantasy.premierleague.com')
+            # Extract CSRF token from raw cookie string
+            csrf_token_match = re.search(r'csrftoken=([^;]+)', self.cookie_string)
+            csrf_token = csrf_token_match.group(1) if csrf_token_match else None
+            
             headers = {'Content-Type': 'application/json'}
             if csrf_token:
                 headers['X-CSRFToken'] = csrf_token
